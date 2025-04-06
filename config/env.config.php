@@ -16,6 +16,7 @@ $ENVCONFIG = [
    'APP' => [
       'HOST' => $_ENV['APP_HOST'],
       'PORT' => $_ENV['APP_PORT'],
+      'ALLOWS_CORS' => $_ENV['ALLOWS_CORS']
    ],
    'DB' => [
       'HOST' => $_ENV['DB_HOST'],

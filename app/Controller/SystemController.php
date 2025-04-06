@@ -42,9 +42,9 @@ class SystemController
    {
       $this->s3Client = new S3Client([
          'version' => 'latest',
-         'region'  => EnvironmentVariable::get('S3.REGION'),
+         'region' => EnvironmentVariable::get('S3.REGION'),
          'credentials' => [
-            'key'    => EnvironmentVariable::get('S3.ACCESS_KEY'),
+            'key' => EnvironmentVariable::get('S3.ACCESS_KEY'),
             'secret' => EnvironmentVariable::get('S3.SECRET_KEY'),
          ],
          'endpoint' => EnvironmentVariable::get('S3.ENDPOINT'),
@@ -98,17 +98,17 @@ class SystemController
       $extension = pathinfo($originalName, PATHINFO_EXTENSION);
       $timestamp = time();
       $randomString = substr(md5(uniqid()), 0, 8);
-      
+
       // Chuyển tên file thành slug an toàn
       $baseName = pathinfo($originalName, PATHINFO_FILENAME);
       $baseName = preg_replace('/[^a-z0-9]+/', '-', strtolower($baseName));
       $baseName = trim($baseName, '-');
-      
+
       // Tạo đường dẫn theo loại file và ngày
       $mimeType = $file->getMimeType();
       $fileType = explode('/', $mimeType)[0]; // image, video, application, etc.
       $datePath = date('Y/m/d');
-      
+
       return sprintf(
          '%s/%s/%s-%s-%s.%s',
          $fileType,
@@ -122,7 +122,10 @@ class SystemController
 
    public function root()
    {
-      return '🚀 WS-Server is running 🚀';
+      return new JsonResponse([
+         'data' => '🚀 WS-Server is running 🚀',
+         'message' => 'Hello World'
+      ], 200);
    }
 
    public function getUserInfoFromRequest(Request $request): JsonResponse
@@ -147,7 +150,7 @@ class SystemController
          }
 
          $file = $request->file('file');
-         
+
          // Validate file
          $validation = $this->validateFile($file);
          if (!$validation['valid']) {
@@ -159,12 +162,12 @@ class SystemController
 
          // Tạo tên file an toàn
          $fileName = $this->generateSafeFileName($file);
-         
+
          // Upload file lên S3
          $result = $this->s3Client->putObject([
             'Bucket' => EnvironmentVariable::get('S3.BUCKET'),
-            'Key'    => $fileName,
-            'Body'   => fopen($file->getPathname(), 'rb'),
+            'Key' => $fileName,
+            'Body' => fopen($file->getPathname(), 'rb'),
             'ContentType' => $file->getMimeType()
          ]);
 
@@ -204,7 +207,7 @@ class SystemController
    {
       try {
          $fileName = $request->get('fileName');
-         
+
          if (!$fileName) {
             return new JsonResponse([
                'message' => 'Không tìm thấy tên file',
@@ -215,7 +218,7 @@ class SystemController
          // Lấy thông tin file từ S3
          $result = $this->s3Client->getObject([
             'Bucket' => EnvironmentVariable::get('S3.BUCKET'),
-            'Key'    => $fileName
+            'Key' => $fileName
          ]);
 
          return new JsonResponse([
@@ -247,7 +250,7 @@ class SystemController
    {
       try {
          $fileName = $request->get('fileName');
-         
+
          if (!$fileName) {
             return new JsonResponse([
                'message' => 'Không tìm thấy tên file',
@@ -259,7 +262,7 @@ class SystemController
          $presignedUrl = $this->s3Client->createPresignedRequest(
             $this->s3Client->getCommand('GetObject', [
                'Bucket' => EnvironmentVariable::get('S3.BUCKET'),
-               'Key'    => $fileName
+               'Key' => $fileName
             ]),
             '+1 hour'
          )->getUri();

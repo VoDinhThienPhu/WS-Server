@@ -42,7 +42,7 @@ class AuthController
       } catch (Exception $e) {
          return new JsonResponse([
             'message' => $e->getMessage(),
-         ], 401);
+         ], 400);
       }
    }
 

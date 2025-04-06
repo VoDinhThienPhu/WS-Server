@@ -66,7 +66,7 @@ return function (Router $router) {
         $router->get('/', [TeamController::class, 'getTeamsByIDUser']);
         $router->post('/', [TeamController::class, 'createTeam']);
         $router->delete('/{IDTeam}', [TeamController::class,'leaveTeam']);
-
+        $router->delete('/delete/{IDTeam}', [TeamController::class,'deleteTeam']);
       });  
 
 //--------------------------------------------------STASTUS--------------------------------------------------//   

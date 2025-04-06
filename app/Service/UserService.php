@@ -45,7 +45,7 @@ class UserService
          ->first();
 
       if (!$user) {
-         throw new Exception('User does not exist');
+          return ["message" => "User not found"];
       }
 
       return $user;

@@ -37,30 +37,49 @@ class TeamService
     }
 
     // Tạo một team mới
-   public function createTeam($data, $IDLeader)
-   {
-      $requiredFields = [
-         'teamName' => 'Team Name is required'
-      ];
+    public function createTeam($data, $IDLeader)
+    {
+        $requiredFields = [
+            'teamName' => 'Team Name is required'
+        ];
 
-      foreach ($requiredFields as $field => $message) {
-         if (empty($data[$field])) {
-            throw new Exception($message);
-         }
-      }
+        foreach ($requiredFields as $field => $message) {
+            if (empty($data[$field])) {
+                throw new Exception($message);
+            }
+        }
 
-      $team = $this->findTeam('TeamName', $data['teamName'], $IDLeader);
-      if ($team) {
-         throw new Exception('Team already exists');
-      } else {
-         return Team::create([
-            "IDLeader" => $IDLeader,
-            "TeamName" => $data["teamName"],
-            "TeamSize" => 1,
-            "TeamDescription" => $data["teamDescription"] ?? null,
-         ]);
-      }
-   }
+        $team = $this->findTeam('TeamName', $data['teamName'], $IDLeader);
+        if ($team) {
+            throw new Exception('Team already exists');
+        }
+
+        try {
+            // Tạo team mới
+            $team = new Team([
+                "IDLeader" => $IDLeader,
+                "TeamName" => $data["teamName"],
+                "TeamSize" => 1,
+                "TeamDescription" => $data["teamDescription"] ?? null,
+            ]);
+            
+            // Lưu team để lấy IDTeam
+            $team->save();
+            $team = $this->findTeam('TeamName', $data['teamName'], $IDLeader);
+
+            // Thêm leader vào team_members sử dụng TeamMemberService
+            $this->teamMemberModel->create([
+                "IDTeam" => $team->IDTeam,
+                "IDUser" => $IDLeader,
+                "RoleInTeam" => 'Leader'
+            ]);
+
+
+            return $team;
+        } catch (Exception $e) {
+            throw new Exception("Failed to create team: " . $e->getMessage());
+        }
+    }
 
    // Tìm một team theo trường cụ thể
    public function findTeam($field, $value, $IDLeader)
@@ -105,6 +124,40 @@ class TeamService
        $teamMember->save();
 
        return true;
+   }
+
+   public function deleteTeam($IDTeam, $IDUser)
+   {
+       // Kiểm tra team có tồn tại không
+       $team = $this->teamModel
+           ->where('IDTeam', $IDTeam)
+           ->where('IsDeleted', 0)
+           ->first();
+
+       if (!$team) {
+           throw new Exception('Team does not exist');
+       }
+
+       // Kiểm tra quyền leader
+       if ($team->IDLeader != $IDUser) {
+           throw new Exception('Only team leader can delete the team');
+       }
+
+       try {
+           // Đánh dấu xóa mềm team
+           $team->IsDeleted = true;
+           $team->save();
+
+           // Đánh dấu xóa mềm tất cả thành viên trong team
+           $this->teamMemberModel
+               ->where('IDTeam', $IDTeam)
+               ->where('IsDeleted', false)
+               ->update(['IsDeleted' => true]);
+
+           return true;
+       } catch (Exception $e) {
+           throw new Exception("Failed to delete team: " . $e->getMessage());
+       }
    }
 
 }

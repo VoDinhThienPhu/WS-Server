@@ -5,6 +5,8 @@ use WorkSpace\Service\TeamService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\Response;
+
 class TeamController
 {
     protected $teamService;
@@ -36,6 +38,7 @@ class TeamController
    {
       try {
          $IDLeader = $request->get('USER')['IDUser'];
+        //  print_r($IDLeader);
          $team = $this->teamService->createTeam($request->json()->all(), $IDLeader);
          return new JsonResponse([
             'message' => 'Created Team Successfully',
@@ -63,5 +66,33 @@ class TeamController
        }
    }
 
+    public function deleteTeam(Request $request, $IDTeam): JsonResponse
+    {
+        try {
+            $IDUser = $request->attributes->get('USER')['IDUser'];
+            // print_r($IDTeam);
+            // print_r($IDUser);
+
+            if (!$IDTeam || !$IDUser) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Missing required parameters'
+                ], 400);
+            }
+
+            $result = $this->teamService->deleteTeam($IDTeam, $IDUser);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Team deleted successfully'
+            ]);
+
+        } catch (Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
 
 }

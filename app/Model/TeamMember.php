@@ -8,7 +8,7 @@ class TeamMember extends Entity
    protected $fillable = ['IDTeam', 'IDUser', 'RoleInTeam', 'JoinAt', 'IsDeleted'];
    protected $attributes = [
       'RoleInTeam' => 'Member',
-      'JoinAt' => 'CURRENT_TIMESTAMP'
+      // 'JoinAt' => 'CURRENT_TIMESTAMP'
    ];
 
    public function team()
